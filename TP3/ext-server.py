@@ -18,4 +18,4 @@ def server (port) :
         data = "%s\n" % data
         sock.sendto(data.encode(), addr)
 
-server(5555)
+server(5556)

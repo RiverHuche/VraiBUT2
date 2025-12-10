@@ -11,4 +11,6 @@ def client (host , port):
     data = sock.recv( BUFSIZE )
     print (data.decode (), end="")
 
-client(sys.argv[1],5555)
+v= input("")
+
+client(sys.argv[1],5556)

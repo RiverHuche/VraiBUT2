@@ -5,8 +5,8 @@ def client(host, port):
     sock.connect((host, port))
     f = sock.makefile(mode="rw")
     while True:
-        v = input("rentrez une valeur")
-        f.write(v)
+        v = input("rentrez une valeur: \n")
+        f.write(v + "\n")
         f.flush()
         print(f.readline(), end="")
         if v=="quit":
