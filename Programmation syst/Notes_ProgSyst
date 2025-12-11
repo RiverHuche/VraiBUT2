@@ -1,0 +1,57 @@
+stockLock (Verrou)	Protège l'accès aux variables d'état (carrosserie, moteur, roue). Un seul verrou protège toutes les méthodes add... et assembleCar.	Exclusion Mutuelle.
+stockLock.lock()	Acquisition du verrou au début de la section critique.	stockLock.lock(); (dans un try)
+stockLock.unlock()	Libération du verrou à la fin. Toujours dans un finally.	} finally { stockLock.unlock(); }
+
+Catégorie,Mécanisme,Rôle,Qui Attend ?
+Non Plein (notFull...),while (stock == MAX) { condition.await(); },Utilisé par le Producteur (Fournisseur). Il attend si la ressource est pleine.,Les Fournisseurs (ex: notFullCarrosserie.await();).
+Non Vide (notEmpty...),while (stock < Min) { condition.await(); },Utilisé par le Consommateur (Assembleur). Il attend si la ressource est insuffisante.,L'Assembleur (ex: notEmptyMoteur.await();).
+condition.signal(),Réveille uniquement les threads qui attendent sur cette condition spécifique.,"Si le stock de carrosserie devient non vide, on réveille ceux qui attendent des carrosseries.",notEmptyCarrosserie.signal();
+
+Méthode,Classe d'appartenance,Rôle,Exemple
+t.wait(),Object,ERREUR. Ne fonctionne pas sans synchronized. Utilisation inappropriée pour attendre un thread.,NE PAS FAIRE.
+t.join(),Thread,Attend que le thread t termine son exécution.,t.join(); (C'est la méthode que vous vouliez utiliser.)
+pool.wait(),Object,Attend une condition interne à l'objet pool dans un bloc synchronized.,synchronized(pool) { pool.wait(); }
+
+Élément,Action,Définition/Rôle,Distinction Clé
+lock(),Acquérir le verrou,Tente de prendre l'accès exclusif. Bloque si verrouillé.,NE libère PAS le verrou.
+unlock(),Libérer le verrou,Rend l'accès exclusif disponible.,C'est l'action de rendre le verrou disponible pour les autres.
+wait(),Bloquer et Libérer,Met le thread en attente (conditionnelle) et rend le verrou disponible.,Fait les deux actions simultanément. Le thread attendra d'être réveillé et de reprendre le verrou pour continuer.
+
+Élément,Type,Définition/Rôle,Exemple d'utilisation
+run(),Méthode (Interface Runnable),"Contient le code métier, la logique que le thread doit exécuter. À surcharger.",// Dans la classe MonThread ou MonRunnable
+start(),Méthode (Thread),Lance l'exécution du thread dans un nouveau contexte. Doit être appelée.,Thread t = new Thread(new MaTache()); t.start();
+join(),Méthode (Thread),Met le thread courant en attente jusqu'à ce que le thread sur lequel join() est appelé se termine.,t.join(); // Attend la fin de 't'
+sleep(long ms),Méthode statique (Thread),Met le thread en pause (bloqué) pendant la durée spécifiée.,Thread.sleep(1000); // Pause d'une seconde
+
+Élément,Type,Définition/Rôle,Exemple d'utilisation
+synchronized,Mot-clé,Assure l'exclusion mutuelle sur l'instance (this) ou la classe.,public synchronized void inc() { ... } OU synchronized (monObjet) { ... }
+wait(),Méthode (Objet Object),Bloque le thread et libère le verrou.,while (pool.isEmpty()) { wait(); }
+notify(),Méthode (Objet Object),Réveille un seul thread en attente (wait()) sur cet objet.,notify(); // Envoyé après un changement d'état
+Règle d'or,Pratique,Toujours utiliser while (condition) wait(); pour éviter les réveils parasites.,synchronized (this) { while (!ok) wait(); }
+
+Élément,Type,Définition/Rôle,Exemple d'utilisation
+Lock,Interface (ReentrantLock),Mécanisme de verrouillage plus flexible.,Lock lock = new ReentrantLock();
+lock(),Méthode (Lock),Tente d'acquérir le verrou. Bloque si le verrou est déjà pris.,lock.lock();
+unlock(),Méthode (Lock),Libère le verrou.,} finally { lock.unlock(); }
+tryLock(),Méthode (Lock),Tente d'acquérir le verrou de manière non bloquante.,if (lock.tryLock()) { ... }
+Condition,Interface,Alternative à wait/notify pour les verrous.,Condition nonPlein = lock.newCondition();
+await(),Méthode (Condition),Bloque le thread et libère le verrou associé.,nonPlein.await();
+signal(),Méthode (Condition),Réveille un thread en attente sur cette condition.,nonPlein.signal();
+
+Élément,Type,Définition/Rôle,Exemple d'utilisation
+CountDownLatch,Classe,Non réutilisable. Un compteur pour un signal de départ ou d'arrivée unique.,CountDownLatch start = new CountDownLatch(1);
+countDown(),Méthode (CountDownLatch),Décrémente le compteur.,start.countDown(); // Donne le signal de départ
+await(),Méthode (CountDownLatch),Bloque le thread jusqu'à ce que le compteur atteigne zéro.,start.await(); // Attend le signal de départ
+CyclicBarrier,Classe,Réutilisable. Synchronise un groupe de threads pour des cycles de travail.,CyclicBarrier bar = new CyclicBarrier(N);
+await(),Méthode (CyclicBarrier),Signale l'arrivée et attend que tous les participants soient là.,bar.await(); // Point de rendez-vous
+Phaser,Classe,Flexible. Enregistrement/désinscription dynamique et gestion de phases.,Phaser p = new Phaser();
+register(),Méthode (Phaser),Ajoute un nouveau participant.,p.register();
+arriveAndAwaitAdvance(),Méthode (Phaser),Signale l'arrivée et attend la fin de la phase.,p.arriveAndAwaitAdvance();
+
+Élément,Type,Définition/Rôle,Exemple d'utilisation
+ExecutorService,Interface,Gère un pool de threads réutilisables.,ExecutorService pool;
+Executors,Classe (Factory),Crée des instances d'ExecutorService.,pool = Executors.newFixedThreadPool(4);
+submit(Runnable r),Méthode (ExecutorService),Soumet une tâche au pool.,pool.submit(new MaTache());
+shutdown(),Méthode (ExecutorService),Démarre l'arrêt ordonné du pool.,pool.shutdown();
+ForkJoinPool,Classe,Implémente le modèle Fork/Join (Vol de tâches).,ForkJoinPool fjp = new ForkJoinPool();
+invoke(ForkJoinTask t),Méthode (ForkJoinPool),Exécute la tâche principale et attend son résultat.,fjp.invoke(new MonRecursiveTask(data));
